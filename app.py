@@ -45,7 +45,6 @@ def login():
 
       if hasil:
         session['name'] = v_login[3]]
-	session['mail'] = v_login[1]
         return redirect(url_for("bigdataApps"))
         # return redirect('/bigdataApps')
         # return render_template("bigdataApps.html")
