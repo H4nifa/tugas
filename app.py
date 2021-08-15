@@ -26,10 +26,10 @@ def index():
 
 @app.route("/login",methods=["GET", "POST"])
 def login():
-  # conn = connect_db()
-  # db = conn.cursor()
-  conn = sqlite3.connect('fga_big_data.db')
+  conn = connect_db()
   db = conn.cursor()
+  #conn = sqlite3.connect('fga_big_data.db')
+  #db = conn.cursor()
   msg = ""
   if request.method == "POST":
       mail = request.form["mail"]
@@ -44,7 +44,7 @@ def login():
          hasil.append(v_login)
 
       if hasil:
-        session['name'] = v_login[3]]
+        session['name'] = v_login[3]
         return redirect(url_for("bigdataApps"))
         # return redirect('/bigdataApps')
         # return render_template("bigdataApps.html")
@@ -55,10 +55,10 @@ def login():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-  # conn = connect_db()
-  # db = conn.cursor()
-  conn = sqlite3.connect('fga_big_data.db')
+  conn = connect_db()
   db = conn.cursor()
+  #conn = sqlite3.connect('fga_big_data.db')
+  #db = conn.cursor()
   if request.method == "POST":
       mail = request.form['mail']
       uname = request.form['uname']
@@ -74,7 +74,7 @@ def register():
   return render_template("register.html")
 
 
-@app.route("/contohfp2_nonspark", methods=["GET", "POST"])
+@app.route("/MybigdataAppsNonPySpark", methods=["GET", "POST"])
 def contohfp2_nonspark():
   # Simple Linear Regression / Klasifikasi / Clustering
   # Importing the libraries
@@ -85,54 +85,10 @@ def contohfp2_nonspark():
   # Importing the dataset => ganti sesuai dengan case yg anda usulkan
   # a. Min. 30 Data dari case data simulasi dari yg Anda usulkan
   # b. Min. 30 Data dari real case, sesuai dgn yg Anda usulkan dari tugas minggu ke-3 (dari Kaggle/UCI Repository)
-  url = "./Salary_Data.csv"
-  dataset = pd.read_csv(url)
-  X = dataset.iloc[:, :-1].values
-  y = dataset.iloc[:, 1].values
 
-  # Splitting the dataset into the Training set and Test set
-  # Lib-nya selain sklearn/ Tensorflow/ Keras/ PyTorch/ etc
-  from sklearn.model_selection import train_test_split
-  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 1/3, random_state = 0)
-
-  # Hitung Mape
-  # from sklearn.metrics import mean_absolute_percentage_error
-
-  # Feature Scaling
-  """from sklearn.preprocessing import StandardScaler
-  sc_X = StandardScaler()
-  X_train = sc_X.fit_transform(X_train)
-  X_test = sc_X.transform(X_test)
-  sc_y = StandardScaler()
-  y_train = sc_y.fit_transform(y_train)"""
-
-  # Fitting Simple Linear Regression to the Training set
-  from sklearn.linear_model import LinearRegression
-  regressor = LinearRegression()
-  regressor.fit(X_train, y_train)
-
-  # Predicting the Test set results
-  y_pred = regressor.predict(X_test)
-  y_pred2 = regressor.predict(X_train)
-
-  # Visualising the Training set results
-  # plt.scatter(X_train, y_train, color = 'red')
-  # plt.plot(X_train, regressor.predict(X_train), color = 'blue')
-
-
-  # Visualising the Test set results
-  # plt.scatter(X_test, y_test, color = 'red')
-  # plt.plot(X_train, regressor.predict(X_train), color = 'blue')
-  # plt.title('Salary vs Experience (Test set)')
-  # plt.xlabel('Years of Experience')
-  # plt.ylabel('Salary')
-  # plt.show()
-
-  aktual, predict = y_train, y_pred2
-  mape = np.sum(np.abs(((aktual - predict)/aktual)*100))/len(predict)
-
-  # return render_template('MybigdataApps.html', y_aktual = list(y_train), y_prediksi = list(y_pred2), mape = mape)
-  return render_template('MybigdataAppsNonPySpark.html', y_aktual = list(y_train), y_prediksi = list(y_pred2), mape = mape)
+  dataset = pd.read_csv('Salary_Data.csv')
+  # return render_template('MybigdataApps.html')
+  return render_template('MybigdataAppsNonPySpark.html')
 
 @app.route("/contohfp2_spark", methods=["GET", "POST"])
 def contohfp2_spark():
@@ -141,6 +97,19 @@ def contohfp2_spark():
   import numpy as np
   import matplotlib.pyplot as plt
   import pandas as pd
+  import os.path
+
+  BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+  url = os.path.join(BASE_DIR, "Salary_Data.csv")
+
+  from pyspark.sql import SparkSession
+  spark = SparkSession.builder.appName("Linear Regression Model").getOrCreate()
+
+  from pyspark.ml.regression import LinearRegression
+  from pyspark.ml.linalg import Vectors
+  from pyspark.ml.feature import VectorAssembler
+  from pyspark.ml.feature import IndexToString, StringIndexer
+
   from pyspark import SQLContext, SparkConf, SparkContext
   from pyspark.sql import SparkSession
   sc = SparkContext.getOrCreate()
@@ -152,7 +121,7 @@ def contohfp2_spark():
   # Importing the dataset => ganti sesuai dengan case yg anda usulkan
   # a. Min. 30 Data dari case data simulasi dari yg Anda usulkan
   # b. Min. 30 Data dari real case, sesuai dgn yg Anda usulkan dari tugas minggu ke-3 (dari Kaggle/UCI Repository)
-  url = "./Salary_Data.csv"
+  # url = "./Salary_Data.csv"
 
   sqlcontext = SQLContext(sc)
   data = sqlcontext.read.csv(url, header = True, inferSchema = True)
@@ -195,6 +164,10 @@ def bigdataApps():
   if request.method == 'POST':
     import pandas as pd
     import numpy as np
+    import os.path
+
+    #BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    #url = os.path.join(BASE_DIR, "dataset_dump.csv")
 
     dataset = request.files['inputDataset']
     # url = "./dataset_dump.csv"
@@ -249,8 +222,14 @@ def bigdataApps():
   else:
     return render_template('bigdataApps.html')
 
-# def connect_db():
-#     return sqlite3.connect('fga_big_data.db')
+def connect_db():
+    import os.path
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(BASE_DIR, "fga_big_data.db")
+    # with sqlite3.connect(db_path) as db:
+
+    return sqlite3.connect(db_path)
 
 
 
